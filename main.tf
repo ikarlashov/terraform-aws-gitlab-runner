@@ -28,6 +28,9 @@ resource "aws_ssm_parameter" "runner_sentry_dsn" {
 }
 
 locals {
+  use_runner_aws_plugin_name = !version_less_than(var.runner_gitlab.runner_version, "16.11")
+  runner_plugin_name    = local.use_aws_plugin ? "aws" : "fleeting-plugin-aws"
+
   template_user_data = templatefile("${path.module}/template/user-data.tftpl",
     {
       eip                 = var.runner_instance.use_eip ? local.template_eip : ""
@@ -128,6 +131,8 @@ locals {
       runners_capacity_per_instance = var.runner_worker_docker_autoscaler.capacity_per_instance
       runners_max_use_count         = var.runner_worker_docker_autoscaler.max_use_count
       runners_max_instances         = var.runner_worker.max_jobs
+
+      runner_plugin_name            = local.runner_plugin_name
 
       runners_update_interval                = var.runner_worker_docker_autoscaler.update_interval
       runners_update_interval_when_expecting = var.runner_worker_docker_autoscaler.update_interval_when_expecting
